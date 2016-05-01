@@ -11,7 +11,6 @@ int main()
     TakEngine engine = TakEngine(5, true);
     while(engine.gameDone() == 0)
     {
-        cout << "1" << endl;
         engine.printBoard();
         if(engine.whiteTurn())
         {
@@ -37,9 +36,7 @@ int main()
             place.type = "place";
             place.x = x;
             place.y = y;
-            cout << "1.1" << endl;
             bool result = engine.tryMove(place);
-            cout << "1.2" << endl;
             if(!result)
             {
                 cout << "Invalid command" << endl;
@@ -56,8 +53,29 @@ int main()
             cin >> y;
             cout << "Direction[nsew]: ";
             cin >> dir;
+            int num = engine.numberAtSpot(x, y);
+            int drop[8];
+            int distance = 0;
+            Move move;
+            while(num > 0)
+            {
+                cout << "Drop how many at position " << distance << ": ";
+                cin >> move.toLeave[distance];
+                num -= move.toLeave[distance];
+                distance++;
+            }
+
+            move.type = "move";
+            move.x = x;
+            move.y = y;
+            move.direction = dir;
+            move.distance = distance;
+            bool result = engine.tryMove(move);
+            if(!result)
+            {
+                cout << "Invalid command" << endl;
+            }
         }
-        cout << "2" << endl;
     }
 
     if(engine.gameDone() == 1)
@@ -66,6 +84,6 @@ int main()
     }
     else
     {
-        couv << "Black wins!" << endl;
+        cout << "Black wins!" << endl;
     }
 }

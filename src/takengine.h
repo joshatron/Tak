@@ -23,6 +23,7 @@ class TakEngine
         int gameDone();
         void printBoard();
         bool whiteTurn();
+        int numberAtSpot(int x, int y);
 };
 
 #endif

@@ -60,3 +60,8 @@ bool TakEngine::whiteTurn()
 {
     return currentBoard.whiteMove;
 }
+
+int TakEngine::numberAtSpot(int x, int y)
+{
+    return currentBoard.board[x+1][y+1].length();
+}

@@ -1,1 +1,1 @@
-Program('test', Split('test.cpp takengine.cpp board.cpp'))
+Program('cli', Split('cli.cpp takengine.cpp board.cpp'))

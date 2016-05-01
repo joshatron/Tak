@@ -106,7 +106,6 @@ bool Board::updateBoard(Move move)
         }
         else
         {
-            cout << "fail1" << endl;
             return false;
         }
     }
@@ -151,28 +150,24 @@ bool Board::updateBoard(Move move)
                 {
                     if(board[currX][currY].compare("-") == 0)
                     {
-                        cout << "fail2" << endl;
                         return false;
                     }
                     if(move.toLeave[k] > current.length())
                     {
-                        cout << "fail3" << endl;
                         return false;
                     }
                     if((currX != x || currY != y) && move.toLeave[k] == 0)
                     {
-                        cout << "fail3.5" << endl;
                         return false;
                     }
-                    drop[k] = current.substr(current.length() - move.toLeave[k], move.toLeave[k]);
-                    current = current.substr(0, current.length() - move.toLeave[k]);
+                    drop[k] = current.substr(0, move.toLeave[k]);
+                    current = current.substr(move.toLeave[k], current.length() - move.toLeave[k]);
 
                     if(board[currX][currY].length() > 0)
                     {
                         char top = board[currX][currY].at(board[currX][currY].length() - 1);
                         if(top == 'c' || top == 'C' || ((top == 's' || top == 'S') && (drop[k].compare("c") != 0 && drop[k].compare("C") != 0)))
                         {
-                            cout << "fail4" << endl;
                             return false;
                         }
                     }
@@ -182,7 +177,6 @@ bool Board::updateBoard(Move move)
 
                 if(current.length() > 0)
                 {
-                    cout << "fail5" << endl;
                     return false;
                 }
 
@@ -219,18 +213,15 @@ bool Board::updateBoard(Move move)
             }
             else
             {
-                cout << "fail6" << endl;
                 return false;
             }
         }
         else
         {
-            cout << "fail7" << endl;
             return false;
         }
     }
 
-    cout << "fail8" << endl;
     return false;
 }
 
@@ -249,6 +240,12 @@ int Board::gameDone()
         bool vertical = true;
         char verticalChar = board[k][1].at(board[k][1].length() - 1);
         bool verticalWhite = (verticalChar == 'f' || verticalChar == 's' || verticalChar == 'c');
+
+        if(verticalChar == 's' || verticalChar == 'S' || horizontalChar == 's' || horizontalChar == 'S')
+        {
+            continue;
+        }
+
         for(int a = 2; a <= boardSize; a++)
         {
             if(board[a][k].length() == 0)
@@ -258,7 +255,11 @@ int Board::gameDone()
             else
             {
                 char temp = board[a][k].at(board[a][k].length() - 1);
-                if(horizontal != (temp == 'f' || temp == 's' || temp == 'c'))
+                if(temp == 's' || temp == 'S')
+                {
+                    horizontal = false;
+                }
+                else if(horizontalWhite != (temp == 'f' || temp == 'c'))
                 {
                     horizontal = false;
                 }
@@ -271,7 +272,11 @@ int Board::gameDone()
             else
             {
                 char temp = board[k][a].at(board[a][k].length() - 1);
-                if(vertical != (temp == 'f' || temp == 's' || temp == 'c'))
+                if(temp == 's' || temp == 'S')
+                {
+                    vertical = false;
+                }
+                else if(verticalWhite != (temp == 'f' || temp == 'c'))
                 {
                     vertical = false;
                 }
@@ -288,7 +293,7 @@ int Board::gameDone()
             {
                 return 2;
             }
-        {
+        }
         if(vertical)
         {
             if(verticalWhite)
@@ -299,7 +304,7 @@ int Board::gameDone()
             {
                 return 2;
             }
-        {
+        }
     }
 
     return 0;
