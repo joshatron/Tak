@@ -28,14 +28,31 @@ int main()
         {
             int x;
             int y;
+            int type;
             cout << "X position: ";
             cin >> x;
             cout << "Y position: ";
             cin >> y;
+            string typeStr;
+            cout << "Type[fsc]: ";
+            cin >> typeStr;
+            if(typeStr.compare("f") == 0)
+            {
+                type = 0;
+            }
+            else if(typeStr.compare("s") == 0)
+            {
+                type == 1;
+            }
+            else
+            {
+                type == 2;
+            }
             Move place;
             place.type = "place";
             place.x = x;
             place.y = y;
+            place.placeType = type;
             bool result = engine.tryMove(place);
             if(!result)
             {
