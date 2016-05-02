@@ -42,11 +42,11 @@ int main()
             }
             else if(typeStr.compare("s") == 0)
             {
-                type == 1;
+                type = 1;
             }
             else
             {
-                type == 2;
+                type = 2;
             }
             Move place;
             place.type = "place";

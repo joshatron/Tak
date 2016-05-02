@@ -47,6 +47,16 @@ class Board
         int gameDone();
         //print out game board
         void print();
+
+    private:
+        bool isValidMove(Move move);
+        bool validPlaceMove(Move move);
+        bool validMoveMove(Move move);
+
+        int roadDone();
+        int boardFilled();
+        int noPieces();
+        int greaterLand();
 };
 
 #endif
