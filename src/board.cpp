@@ -271,7 +271,7 @@ bool Board::validMoveMove(Move move)
     }
 
     //not moving far enough
-    if(move.distance <= 0)
+    if(move.distance <= 1)
     {
         return false;
     }

@@ -8,7 +8,7 @@ using std::endl;
 
 int main()
 {
-    TakEngine engine = TakEngine(3, true);
+    TakEngine engine = TakEngine(5, true);
     while(engine.gameDone() == 0)
     {
         engine.printBoard();
@@ -103,4 +103,5 @@ int main()
     {
         cout << "Black wins!" << endl;
     }
+    engine.printBoard();
 }

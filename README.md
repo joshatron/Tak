@@ -9,14 +9,8 @@ Then run executable
 
 TODO:
 
-* finish all end of game possibilities
-    * non linear road
-    * out of pieces
-    * out of space
-* finish cli game
-    * choose piece to lay down
 * make gui for game
-* thoroughly test
+* thoroughly test engine
     * placing
     * moving
     * end of game
