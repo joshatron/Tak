@@ -137,17 +137,20 @@ bool Board::updateBoard(Move move)
         board[x][y] = "";
         for(int k = 0; k < move.distance; k++)
         {
-            //sit down standing stones
-            char top = board[currX][currY].at(board[currX][currY].length() - 1);
-            if(top == 's')
+            if(board[currX][currY].length() > 0)
             {
-                board[currX][currY] = board[currX][currY].substr(0, board[currX][currY].length() - 1);
-                board[currX][currY] = board[currX][currY].append("f");
-            }
-            if(top == 'S')
-            {
-                board[currX][currY] = board[currX][currY].substr(0, board[currX][currY].length() - 1);
-                board[currX][currY] = board[currX][currY].append("F");
+                //sit down standing stones
+                char top = board[currX][currY].at(board[currX][currY].length() - 1);
+                if(top == 's')
+                {
+                    board[currX][currY] = board[currX][currY].substr(0, board[currX][currY].length() - 1);
+                    board[currX][currY] = board[currX][currY].append("f");
+                }
+                if(top == 'S')
+                {
+                    board[currX][currY] = board[currX][currY].substr(0, board[currX][currY].length() - 1);
+                    board[currX][currY] = board[currX][currY].append("F");
+                }
             }
 
             //place bottom of pile on top of spot
@@ -171,8 +174,8 @@ bool Board::updateBoard(Move move)
 
 bool Board::isValidMove(Move move)
 {
-    x = move.x + 1;
-    y = move.y + 1;
+    int x = move.x + 1;
+    int y = move.y + 1;
 
     //out of bounds
     if(x < 1 || x > boardSize || y < 1 || y > boardSize)
@@ -214,6 +217,9 @@ bool Board::isValidMove(Move move)
 
 bool Board::validPlaceMove(Move move)
 {
+    int x = move.x + 1;
+    int y = move.y + 1;
+
     //not valid piece type
     if(move.placeType < 0 || move.placeType > 2)
     {
@@ -246,8 +252,11 @@ bool Board::validPlaceMove(Move move)
     return true;
 }
 
-bool Board::validMoveMove()
+bool Board::validMoveMove(Move move)
 {
+    int x = move.x + 1;
+    int y = move.y + 1;
+
     //spot empty
     if(board[x][y].length() == 0)
     {
@@ -256,7 +265,7 @@ bool Board::validMoveMove()
 
     //top not owned by current player
     char top = board[x][y].at(board[x][y].length() - 1);
-    if((top == 'f' || top == 's' || top == 'c') != whiteTurn)
+    if((top == 'f' || top == 's' || top == 'c') != whiteMove)
     {
         return false;
     }
@@ -322,11 +331,14 @@ bool Board::validMoveMove()
                 return false;
             }
         
-            //cant be placed on current spot
-            top = board[currX][currY].at(board[currX][currY].length() - 1);
-            if(top == 'c' || top == 'C' || ((top == 's' || top == 'S') && (current.compare("c") != 0 && current.compare("C") != 0)))
+            if(board[currX][currY].length() > 0)
             {
-                return false;
+                //cant be placed on current spot
+                top = board[currX][currY].at(board[currX][currY].length() - 1);
+                if(top == 'c' || top == 'C' || ((top == 's' || top == 'S') && (current.compare("c") != 0 && current.compare("C") != 0)))
+                {
+                    return false;
+                }
             }
         }
 
@@ -362,6 +374,106 @@ int Board::gameDone()
 
 int Board::roadDone()
 {
+    for(int k = 1; k <= boardSize; k++)
+    {
+        int result = checkOneRoad(1, k, boardSize, 0);
+        if(result != 0)
+        {
+            return result;
+        }
+
+        result = checkOneRoad(k, 1, 0, boardSize);
+        if(result != 0)
+        {
+            return result;
+        }
+    }
+
+    return 0;
+}
+
+int Board::checkOneRoad(int x, int y, int finalX, int finalY)
+{
+    if(board[x][y].compare("") == 0)
+    {
+        return 0;
+    }
+
+    bool whiteRoad = true;
+
+    char top = board[x][y].at(board[x][y].length() - 1);
+    if(top == 'F' || top == 'C')
+    {
+        whiteRoad = false;
+    }
+    else if(top == 'f' || top == 'c')
+    {
+        whiteRoad = true;
+    }
+    else
+    {
+        return 0;
+    }
+
+    int visited[10][10];
+    for(int k = 0; k < 10; k++)
+    {
+        for(int a = 0; a < 10; a++)
+        {
+            if(k < 1 || a < 1 || k > boardSize || a > boardSize)
+            {
+                visited[k][a] = -1;
+            }
+            else
+            {
+                visited[k][a] = 0;
+            }
+        }
+    }
+
+    if(roadBFS(visited, x, y, finalX, finalY, whiteRoad) == 1)
+    {
+        if(whiteRoad)
+        {
+            return 1;
+        }
+        else
+        {
+            return 2;
+        }
+    }
+}
+
+int Board::roadBFS(int visited[][10], int x, int y, int finalX, int finalY, bool whiteRoad)
+{
+    if(x == finalX || y == finalY)
+    {
+        return 1;
+    }
+
+    for(int k = -1; k < 2; k++)
+    {
+        for(int a = -1; a < 2; a++)
+        {
+            if(((k == -1 || k == 1) && a == 0) || ((a == -1 || a == 1) && k == 0))
+            {
+                if(board[x+k][y+a].compare("") != 0)
+                {
+                    char top = board[x+k][y+a].at(board[x+k][y+a].length() - 1);
+                    if(visited[x+k][y+a] == 0 && (top == 'f' || top == 'c') == whiteRoad && (top != 's' && top != 'S'))
+                    {
+                        visited[x+k][y+a] = 1;
+                        int result = roadBFS(visited, x + k, y + a, finalX, finalY, whiteRoad);
+                        if(result == 1)
+                        {
+                            return 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     return 0;
 }
 

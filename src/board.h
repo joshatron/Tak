@@ -54,6 +54,8 @@ class Board
         bool validMoveMove(Move move);
 
         int roadDone();
+        int checkOneRoad(int x, int y, int finalX, int finalY);
+        int roadBFS(int (*visited)[10], int x, int y, int finalX, int finalY, bool whiteRoad);
         int boardFilled();
         int noPieces();
         int greaterLand();
