@@ -543,6 +543,10 @@ int Board::greaterLand()
 
 void Board::print()
 {
+    cout << "White pieces: " << whitePieces << endl;
+    cout << "White capstones: " << whiteCapstones << endl;
+    cout << "Black pieces: " << blackPieces << endl;
+    cout << "Black capstones: " << blackCapstones << endl;
     for(int k = 1; k <= boardSize; k++)
     {
         for(int a = 1; a <= boardSize; a++)
