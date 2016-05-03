@@ -7,13 +7,17 @@ Instruction are included in rules.pdf.
 Requires: qmake
 
 To compile:
-    cd src
-    qmake tak.pro
-    make
+```bash
+cd src
+qmake tak.pro
+make
+```
 
 To run cli game:
-    cd cli
-    ./cli
+```bash
+cd cli
+./cli
+```
 
 TODO:
 
