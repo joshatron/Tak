@@ -4,8 +4,7 @@ Tak
 Plays the game of tak, from kingkiller chronicle.
 Instruction are included in rules.pdf.
 
-To run: "scons -Q"
-Then run executable
+To run: "cd src/ ; scons ; ./cli"
 
 TODO:
 

@@ -8,7 +8,15 @@ using std::endl;
 
 int main()
 {
-    TakEngine engine = TakEngine(5, true);
+    int boardSize = 0;
+    while(boardSize < 3 || boardSize > 8)
+    {
+        cout << "Board dimension[3-8]: ";
+        cin >> boardSize;
+    }
+
+    TakEngine engine = TakEngine(boardSize, true);
+
     while(engine.gameDone() == 0)
     {
         engine.printBoard();
