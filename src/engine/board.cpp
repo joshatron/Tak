@@ -134,6 +134,10 @@ bool Board::updateBoard(Move move)
         int currX = x;
         int currY = y;
         string current = board[x][y];
+        if(current.length() > boardSize)
+        {
+            current = current.substr(current.length() - boardSize, boardSize);
+        }
         board[x][y] = "";
         for(int k = 0; k < move.distance; k++)
         {
@@ -306,6 +310,10 @@ bool Board::validMoveMove(Move move)
     int currX = x;
     int currY = y;
     string current = board[x][y];
+    if(current.length() > boardSize)
+    {
+        current = current.substr(current.length() - boardSize, boardSize);
+    }
     for(int k = 0; k < move.distance; k++)
     {
         //off board
