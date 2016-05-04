@@ -12,6 +12,8 @@ CONFIG += console
 CONFIG += c++11
 INCLUDEPATH += ../engine
 LIBS += -L../engine -lengine
+INCLUDEPATH += ../../lib
+LIBS += -L../../lib -llib
 
 RESOURCES += \
     shaders.qrc
