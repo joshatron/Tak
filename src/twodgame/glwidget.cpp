@@ -34,54 +34,6 @@ GLWidget::GLWidget(QWidget *parent) : QOpenGLWidget(parent) {
     height = baseHeight;
     bottomBoardState = 0;
     engine = TakEngine(5, true);
-    currentMove.x = -1;
-    currentMove.y = -1;
-    Move place;
-    place.type = "place";
-    place.x = 0;
-    place.y = 0;
-    place.placeType = 0;
-    engine.tryMove(place);
-    place.x = 1;
-    engine.tryMove(place);
-    place.x = 2;
-    place.placeType = 1;
-    engine.tryMove(place);
-    place.x = 3;
-    place.placeType = 2;
-    engine.tryMove(place);
-
-    Move move;
-    move.type = "move";
-    move.x = 1;
-    move.y = 0;
-    move.direction = "w";
-    move.toLeave[0] = 0;
-    move.toLeave[1] = 1;
-    move.distance = 2;
-    engine.tryMove(move);
-    move.x = 3;
-    move.y = 0;
-    engine.tryMove(move);
-
-    place.x = 1;
-    place.y = 0;
-    place.placeType = 0;
-    engine.tryMove(place);
-    place.x = 0;
-    place.y = 1;
-    place.placeType = 1;
-    engine.tryMove(place);
-
-    move.x = 1;
-    move.y = 0;
-    engine.tryMove(move);
-    move.x = 0;
-    move.y = 1;
-    move.direction = "n";
-    engine.tryMove(move);
-
-    engine.printBoard();
 }
 
 GLWidget::~GLWidget() {
