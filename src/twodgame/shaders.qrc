@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>frag.glsl</file>
         <file>vert.glsl</file>
+        <file>line_frag.glsl</file>
+        <file>line_vert.glsl</file>
     </qresource>
 </RCC>

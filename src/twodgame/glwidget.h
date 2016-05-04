@@ -36,7 +36,11 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
     private:
         GLuint loadShaders(const char* vertf, const char* fragf);
         static const GLchar* readShader(const char* filename);
+        void initializeLines();
         void updatePositions();
+
+        void addRect(double topLeftX, double topLeftY, double width, double height, vec3 color);
+        void addHex(double centerX, double centerY, double radius, vec3 color);
 
         GLuint vao;
         GLuint program;
@@ -46,6 +50,11 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 
         GLuint projectionBuffer;
         GLint projectionLoc;
+
+        GLuint lineVao;
+        GLuint lineProg;
+        GLuint linePositionBuffer;
+        GLint lineProjectionLoc;
 
         //the projection matrix
         glm::mat4 projection;
@@ -62,6 +71,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 
         //drawn with GL_TRIANGLES
         vector<vec2> points;
+        vector<vec2> lines;
         vector<vec3> colors;
 
         double squareSize;

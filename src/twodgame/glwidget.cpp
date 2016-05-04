@@ -45,6 +45,37 @@ GLWidget::GLWidget(QWidget *parent) : QOpenGLWidget(parent) {
     place.x = 3;
     place.placeType = 2;
     engine.tryMove(place);
+
+    Move move;
+    move.type = "move";
+    move.x = 1;
+    move.y = 0;
+    move.direction = "w";
+    move.toLeave[0] = 0;
+    move.toLeave[1] = 1;
+    move.distance = 2;
+    engine.tryMove(move);
+    move.x = 3;
+    move.y = 0;
+    engine.tryMove(move);
+
+    place.x = 1;
+    place.y = 0;
+    place.placeType = 0;
+    engine.tryMove(place);
+    place.x = 0;
+    place.y = 1;
+    place.placeType = 1;
+    engine.tryMove(place);
+
+    move.x = 1;
+    move.y = 0;
+    engine.tryMove(move);
+    move.x = 0;
+    move.y = 1;
+    move.direction = "n";
+    engine.tryMove(move);
+
     engine.printBoard();
 }
 
@@ -64,8 +95,10 @@ void GLWidget::keyReleaseEvent(QKeyEvent *event)
 void GLWidget::initializeGL() {
     initializeOpenGLFunctions();
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glPointSize(2.0f);
+
+    initializeLines();
 
     // Create a new Vertex Array Object on the GPU which
     // saves the attribute layout of our vertices.
@@ -105,6 +138,37 @@ void GLWidget::initializeGL() {
     projectionLoc = glGetUniformLocation(program, "projection");
 }
 
+void GLWidget::initializeLines()
+{
+    glGenVertexArrays(1, &lineVao);
+    glBindVertexArray(lineVao);
+
+    // Create a buffer on the GPU for position data
+    glGenBuffers(1, &linePositionBuffer);
+
+    // Upload the position data to the GPU, storing
+    // it in the buffer we just allocated.
+    glBindBuffer(GL_ARRAY_BUFFER, linePositionBuffer);
+    glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+
+    // Load our vertex and fragment shaders into a program object
+    // on the GPU
+    GLuint program = loadShaders(":/line_vert.glsl", ":/line_frag.glsl");
+    lineProg = program;
+
+    // Bind the attribute "position" (defined in our vertex shader)
+    // to the currently bound buffer object, which contains our
+    // position data for a single triangle. This information 
+    // is stored in our vertex array object.
+    glUseProgram(program);
+    glBindBuffer(GL_ARRAY_BUFFER, linePositionBuffer);
+    GLint positionIndex = glGetAttribLocation(program, "position");
+    glEnableVertexAttribArray(positionIndex);
+    glVertexAttribPointer(positionIndex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+    lineProjectionLoc = glGetUniformLocation(program, "projection");
+}
+
 void GLWidget::resizeGL(int w, int h) {
     glViewport(0,0,w,h);
     width = w;
@@ -125,6 +189,8 @@ void GLWidget::resizeGL(int w, int h) {
 
     glUseProgram(program);
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, &projection[0][0]);
+    glUseProgram(lineProg);
+    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, &projection[0][0]);
 }
 
 void GLWidget::paintGL() {
@@ -138,11 +204,18 @@ void GLWidget::paintGL() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vec3) * colors.size(), colors.data(), GL_DYNAMIC_DRAW);
     glBindVertexArray(vao);
     glDrawArrays(GL_TRIANGLES, 0, points.size());
+
+    glUseProgram(lineProg);
+    glBindBuffer(GL_ARRAY_BUFFER, linePositionBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vec2) * lines.size(), lines.data(), GL_DYNAMIC_DRAW);
+    glBindVertexArray(lineVao);
+    glDrawArrays(GL_LINES, 0, lines.size());
 }
 
 void GLWidget::updatePositions()
 {
     points.clear();
+    lines.clear();
     colors.clear();
 
     bool greyStart = true;
@@ -151,147 +224,127 @@ void GLWidget::updatePositions()
     boardOffsetX = (1600 - (squareSize * engine.boardSize)) / 2;
     boardOffsetY = 30;
 
+    vec3 rectColor(.7,.7,.7);
     //left top rectangle
-    points.push_back(vec2(50, 30));
-    points.push_back(vec2(400, 30));
-    points.push_back(vec2(50, 687));
-
-    points.push_back(vec2(400, 687));
-    points.push_back(vec2(400, 30));
-    points.push_back(vec2(50, 687));
-
+    addRect(50, 30, 350, 657, rectColor);
     //right top rectangle
-    points.push_back(vec2(1550, 30));
-    points.push_back(vec2(1200, 30));
-    points.push_back(vec2(1550, 687));
+    addRect(1200, 30, 350, 657, rectColor);
+    //bottom rectangle
+    addRect(50, 727, 1500, 143, rectColor);
 
-    points.push_back(vec2(1200, 687));
-    points.push_back(vec2(1200, 30));
-    points.push_back(vec2(1550, 687));
-
-    points.push_back(vec2(50, 727));
-    points.push_back(vec2(1550, 727));
-    points.push_back(vec2(50, 870));
-
-    points.push_back(vec2(1550, 870));
-    points.push_back(vec2(1550, 727));
-    points.push_back(vec2(50, 870));
-
-    for(int k = 0; k < 18; k++)
-    {
-        colors.push_back(vec3(.7, .7, .7));
-    }
-
+    vec3 whiteSquare(1,1,1);
+    vec3 blackSquare(.7,.7,.7);
+    vec3 whitePiece(1,1,1);
+    vec3 blackPiece(0,0,0);
     for(int k = 0; k < engine.boardSize; k++)
     {
         for(int a = 0; a < engine.boardSize; a++)
         {
             //background
-            points.push_back(vec2(boardOffsetX + (a) * squareSize, boardOffsetY + (k) * squareSize));
-            points.push_back(vec2(boardOffsetX + (a + 1) * squareSize, boardOffsetY + (k) * squareSize));
-            points.push_back(vec2(boardOffsetX + (a) * squareSize, boardOffsetY + (k + 1) * squareSize));
-
-            points.push_back(vec2(boardOffsetX + (a) * squareSize, boardOffsetY + (k + 1) * squareSize));
-            points.push_back(vec2(boardOffsetX + (a + 1) * squareSize, boardOffsetY + (k) * squareSize));
-            points.push_back(vec2(boardOffsetX + (a + 1) * squareSize, boardOffsetY + (k + 1) * squareSize));
-
-            for(int t = 0; t < 6; t++)
+            if(grey)
             {
-                if(grey)
-                {
-                    colors.push_back(vec3(.7, .7, .7));
-                }
-                else
-                {
-                    colors.push_back(vec3(1,1,1));
-                }
+                addRect(boardOffsetX + a * squareSize, boardOffsetY + k * squareSize, squareSize, squareSize, blackSquare);
+            }
+            else
+            {
+                addRect(boardOffsetX + a * squareSize, boardOffsetY + k * squareSize, squareSize, squareSize, whiteSquare);
             }
 
             //pieces
             string pieces = engine.stringAtSpot(a, k);
             if(pieces.length() > 0)
             {
-                double height = squareSize * .9;
                 int num = pieces.length();
-                double width = squareSize * .9;
                 char top = pieces.at(pieces.length() - 1);
-                if(top == 's' || top == 'S' || top == 'c' || top == 'C')
-                {
-                    height = squareSize * .7;
-                    num--;
-                    if(top == 's' || top == 'S')
-                    {
-                        points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .45), boardOffsetY + k * squareSize + (squareSize * .05)));
-                        points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .55), boardOffsetY + k * squareSize + (squareSize * .05)));
-                        points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .45), boardOffsetY + k * squareSize + (squareSize * .25)));
 
-                        points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .55), boardOffsetY + k * squareSize + (squareSize * .25)));
-                        points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .55), boardOffsetY + k * squareSize + (squareSize * .05)));
-                        points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .45), boardOffsetY + k * squareSize + (squareSize * .25)));
-                        for(int t = 0; t < 6; t++)
+                if(num == 1)
+                {
+                    if(top == 'f')
+                    {
+                        addRect(boardOffsetX + a * squareSize + squareSize * .15, boardOffsetY + k * squareSize + squareSize * .15,
+                                squareSize * .7, squareSize * .7, whitePiece);
+                    }
+                    else if(top == 'F')
+                    {
+                        addRect(boardOffsetX + a * squareSize + squareSize * .15, boardOffsetY + k * squareSize + squareSize * .15,
+                                squareSize * .7, squareSize * .7, blackPiece);
+                    }
+                    else if(top == 's')
+                    {
+                        addRect(boardOffsetX + a * squareSize + squareSize * .4, boardOffsetY + k * squareSize + squareSize * .15,
+                                squareSize * .2, squareSize * .7, whitePiece);
+                    }
+                    else if(top == 'S')
+                    {
+                        addRect(boardOffsetX + a * squareSize + squareSize * .4, boardOffsetY + k * squareSize + squareSize * .15,
+                                squareSize * .2, squareSize * .7, blackPiece);
+                    }
+                    else if(top == 'c')
+                    {
+                        addHex(boardOffsetX + a * squareSize + squareSize * .5, boardOffsetY + k * squareSize + squareSize * .5,
+                               squareSize * .35, whitePiece);
+                    }
+                    else if(top == 'C')
+                    {
+                        addHex(boardOffsetX + a * squareSize + squareSize * .5, boardOffsetY + k * squareSize + squareSize * .5,
+                               squareSize * .35, blackPiece);
+                    }
+                }
+                else
+                {
+                    if(top == 'f' || top == 'F')
+                    {
+                        double height = .7 * squareSize / num;
+                        for(int i = 0; i < num; i++)
                         {
-                            if(top == 's')
+                            if(pieces.at(i) == 'f')
                             {
-                                colors.push_back(vec3(1,1,1));
+                                addRect(boardOffsetX + a * squareSize + squareSize * .15, boardOffsetY + k * squareSize + squareSize * .15 + (num - 1 - i) * height,
+                                        squareSize * .7, height, whitePiece);
                             }
                             else
                             {
-                                colors.push_back(vec3(0,0,0));
+                                addRect(boardOffsetX + a * squareSize + squareSize * .15, boardOffsetY + k * squareSize + squareSize * .15 + (num - 1 - i) * height,
+                                        squareSize * .7, height, blackPiece);
                             }
                         }
                     }
                     else
                     {
-                        double currentX = boardOffsetX + a * squareSize + (squareSize * .5);
-                        double currentY = boardOffsetY + k * squareSize + (squareSize * .15);
-                        double radius = squareSize * .2;
-                        for(int k = 0; k < engine.whiteCapstonesLeft(); k++)
+                        if(top == 's')
                         {
-                            for(int a = 0; a < 20; a++)
+                            addRect(boardOffsetX + a * squareSize + squareSize * .4, boardOffsetY + k * squareSize + squareSize * .15,
+                                    squareSize * .2, squareSize * .35, whitePiece);
+                        }
+                        else if(top == 'S')
+                        {
+                            addRect(boardOffsetX + a * squareSize + squareSize * .4, boardOffsetY + k * squareSize + squareSize * .15,
+                                    squareSize * .2, squareSize * .35, blackPiece);
+                        }
+                        else if(top == 'c')
+                        {
+                            addHex(boardOffsetX + a * squareSize + squareSize * .5, boardOffsetY + k * squareSize + squareSize * .325,
+                                   squareSize * .2, whitePiece);
+                        }
+                        else if(top == 'C')
+                        {
+                            addHex(boardOffsetX + a * squareSize + squareSize * .5, boardOffsetY + k * squareSize + squareSize * .325,
+                                   squareSize * .2, blackPiece);
+                        }
+                        
+                        double height = .35 * squareSize / (num - 1);
+                        for(int i = 0; i < num - 1; i++)
+                        {
+                            if(pieces.at(i) == 'f')
                             {
-                                vec2 first = vec2(cos((M_PI / 3) * a + (M_PI / 3)) * radius + currentX, sin((M_PI / 3) * a + (M_PI / 3)) * radius + currentY);
-                                vec2 second = vec2(cos((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + currentX, sin((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + currentY);
-
-                                points.push_back(vec2(currentX, currentY));
-                                points.push_back(first);
-                                points.push_back(second);
-
-                                for(int k = 0; k < 3; k++)
-                                {
-                                    if(top == 'c')
-                                    {
-                                        colors.push_back(vec3(1,1,1));
-                                    }
-                                    else
-                                    {
-                                        colors.push_back(vec3(0,0,0));
-                                    }
-                                }
+                                addRect(boardOffsetX + a * squareSize + squareSize * .15, boardOffsetY + k * squareSize + squareSize * .5 + (num - 2 - i) * height,
+                                        squareSize * .7, height, whitePiece);
                             }
-
-                            currentY += 60;
-                        }
-                    }
-                }
-
-                for(int i = 0; i < num; i++)
-                {
-                    points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .05), boardOffsetY + (k + 1) * squareSize - (squareSize * .05) * i));
-                    points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .95), boardOffsetY + (k + 1) * squareSize - (squareSize * .05) * i));
-                    points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .05), boardOffsetY + (k + 1) * squareSize - (squareSize * .05) * i - height / num));
-
-                    points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .95), boardOffsetY + (k + 1) * squareSize - (squareSize * .05) * i - height / num));
-                    points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .95), boardOffsetY + (k + 1) * squareSize - (squareSize * .05) * i));
-                    points.push_back(vec2(boardOffsetX + a * squareSize + (squareSize * .05), boardOffsetY + (k + 1) * squareSize - (squareSize * .05) * i - height / num));
-                    for(int t = 0; t < 6; t++)
-                    {
-                        if(pieces.at(i) == 'f')
-                        {
-                            colors.push_back(vec3(1,1,1));
-                        }
-                        else
-                        {
-                            colors.push_back(vec3(0,0,0));
+                            else
+                            {
+                                addRect(boardOffsetX + a * squareSize + squareSize * .15, boardOffsetY + k * squareSize + squareSize * .5 + (num - 2 - i) * height,
+                                        squareSize * .7, height, blackPiece);
+                            }
                         }
                     }
                 }
@@ -309,18 +362,7 @@ void GLWidget::updatePositions()
 
     for(int k = 0; k < engine.whitePiecesLeft(); k++)
     {
-        points.push_back(vec2(currentX, currentY));
-        points.push_back(vec2(currentX + 55, currentY));
-        points.push_back(vec2(currentX, currentY + 20));
-
-        points.push_back(vec2(currentX + 55, currentY + 20));
-        points.push_back(vec2(currentX + 55, currentY));
-        points.push_back(vec2(currentX, currentY + 20));
-
-        for(int k = 0; k < 6; k++)
-        {
-            colors.push_back(vec3(1, 1, 1));
-        }
+        addRect(currentX, currentY, 55, 20, whitePiece);
 
         currentY += 25;
         if(currentY > 655)
@@ -336,18 +378,7 @@ void GLWidget::updatePositions()
 
     for(int k = 0; k < engine.blackPiecesLeft(); k++)
     {
-        points.push_back(vec2(currentX, currentY));
-        points.push_back(vec2(currentX + 55, currentY));
-        points.push_back(vec2(currentX, currentY + 20));
-
-        points.push_back(vec2(currentX + 55, currentY + 20));
-        points.push_back(vec2(currentX + 55, currentY));
-        points.push_back(vec2(currentX, currentY + 20));
-
-        for(int k = 0; k < 6; k++)
-        {
-            colors.push_back(vec3(0, 0, 0));
-        }
+        addRect(currentX, currentY, 55, 20, blackPiece);
 
         currentY += 25;
         if(currentY > 655)
@@ -364,20 +395,7 @@ void GLWidget::updatePositions()
 
     for(int k = 0; k < engine.whiteCapstonesLeft(); k++)
     {
-        for(int a = 0; a < 20; a++)
-        {
-            vec2 first = vec2(cos((M_PI / 3) * a + (M_PI / 3)) * radius + currentX, sin((M_PI / 3) * a + (M_PI / 3)) * radius + currentY);
-            vec2 second = vec2(cos((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + currentX, sin((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + currentY);
-
-            points.push_back(vec2(currentX, currentY));
-            points.push_back(first);
-            points.push_back(second);
-
-            for(int k = 0; k < 3; k++)
-            {
-                colors.push_back(vec3(1, 1, 1));
-            }
-        }
+        addHex(currentX, currentY, radius, whitePiece);
 
         currentY += 60;
     }
@@ -388,22 +406,54 @@ void GLWidget::updatePositions()
 
     for(int k = 0; k < engine.blackCapstonesLeft(); k++)
     {
-        for(int a = 0; a < 6; a++)
-        {
-            vec2 first = vec2(cos((M_PI / 3) * a + (M_PI / 3)) * radius + currentX, sin((M_PI / 3) * a + (M_PI / 3)) * radius + currentY);
-            vec2 second = vec2(cos((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + currentX, sin((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + currentY);
-
-            points.push_back(vec2(currentX, currentY));
-            points.push_back(first);
-            points.push_back(second);
-
-            for(int k = 0; k < 3; k++)
-            {
-                colors.push_back(vec3(0, 0, 0));
-            }
-        }
+        addHex(currentX, currentY, radius, blackPiece);
 
         currentY += 60;
+    }
+}
+
+void GLWidget::addRect(double topLeftX, double topLeftY, double width, double height, vec3 color)
+{
+    points.push_back(vec2(topLeftX, topLeftY));
+    points.push_back(vec2(topLeftX, topLeftY + height));
+    points.push_back(vec2(topLeftX + width, topLeftY));
+
+    points.push_back(vec2(topLeftX + width, topLeftY + height));
+    points.push_back(vec2(topLeftX, topLeftY + height));
+    points.push_back(vec2(topLeftX + width, topLeftY));
+
+    for(int k = 0; k < 6; k++)
+    {
+        colors.push_back(color);
+    }
+
+    lines.push_back(vec2(topLeftX, topLeftY));
+    lines.push_back(vec2(topLeftX, topLeftY + height));
+    lines.push_back(vec2(topLeftX, topLeftY + height));
+    lines.push_back(vec2(topLeftX + width, topLeftY + height));
+    lines.push_back(vec2(topLeftX + width, topLeftY + height));
+    lines.push_back(vec2(topLeftX + width, topLeftY));
+    lines.push_back(vec2(topLeftX + width, topLeftY));
+    lines.push_back(vec2(topLeftX, topLeftY));
+}
+
+void GLWidget::addHex(double centerX, double centerY, double radius, vec3 color)
+{
+    for(int a = 0; a < 6; a++)
+    {
+        vec2 first = vec2(cos((M_PI / 3) * a + (M_PI / 3)) * radius + centerX, sin((M_PI / 3) * a + (M_PI / 3)) * radius + centerY);
+        vec2 second = vec2(cos((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + centerX, sin((M_PI / 3) * (a + 1) + (M_PI / 3)) * radius + centerY);
+
+        points.push_back(vec2(centerX, centerY));
+        points.push_back(first);
+        points.push_back(second);
+        lines.push_back(first);
+        lines.push_back(second);
+
+        for(int k = 0; k < 3; k++)
+        {
+            colors.push_back(color);
+        }
     }
 }
 
