@@ -27,6 +27,7 @@ class TakEngine
         //size- size of the board
         //white- true if white goes first
         TakEngine(int size, bool white);
+        TakEngine();
         //try to make move
         //if move legal, returns true
         //if move illegal, returns false
@@ -42,6 +43,11 @@ class TakEngine
         bool whiteTurn();
         //returns how many pieces are on a spot
         int numberAtSpot(int x, int y);
+        string stringAtSpot(int x, int y){return currentBoard.board[x+1][y+1];}
+        int whitePiecesLeft(){return currentBoard.whitePieces;}
+        int whiteCapstonesLeft(){return currentBoard.whiteCapstones;}
+        int blackPiecesLeft(){return currentBoard.blackPieces;}
+        int blackCapstonesLeft(){return currentBoard.blackCapstones;}
 };
 
 #endif

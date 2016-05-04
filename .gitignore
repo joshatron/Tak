@@ -4,3 +4,4 @@
 Makefile
 
 src/cli/cli
+src/twodgame/twodgame

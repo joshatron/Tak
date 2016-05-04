@@ -35,6 +35,14 @@ TakEngine::TakEngine(int size, bool white)
     currentBoard = Board(size, maxPieces, maxCapstones, white);
 }
 
+TakEngine::TakEngine()
+{
+    boardSize = 5;
+    maxPieces = 21;
+    maxCapstones = 1;
+    currentBoard = Board(boardSize, maxPieces, maxCapstones, true);
+}
+
 bool TakEngine::tryMove(Move move)
 {
     bool result = currentBoard.updateBoard(move);

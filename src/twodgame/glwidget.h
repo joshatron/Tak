@@ -15,6 +15,7 @@
 #define GLM_FORCE_RADIANS
 
 using glm::vec2;
+using glm::vec3;
 using std::vector;
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
@@ -41,6 +42,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
         GLuint program;
 
         GLuint positionBuffer;
+        GLuint colorBuffer;
 
         GLuint projectionBuffer;
         GLint projectionLoc;
@@ -58,12 +60,13 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 
         TakEngine engine;
 
-        vector<vec2> whiteRects;
-        vector<vec2> blackRects;
-        vector<vec2> whiteCircles;
-        vector<vec2> blackCircles;
-        vector<vec2> boardLines;
-        vector<vec2> greyRects;
+        //drawn with GL_TRIANGLES
+        vector<vec2> points;
+        vector<vec3> colors;
+
+        double squareSize;
+        double boardOffsetX;
+        double boardOffsetY;
 };
 
 #endif

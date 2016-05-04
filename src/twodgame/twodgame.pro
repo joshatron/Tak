@@ -1,6 +1,6 @@
 TARGET = twodgame
 HEADERS += glwidget.h
-SOURCES += glwidget.cpp
+SOURCES += glwidget.cpp main.cpp
 
 macx {
 	QMAKE_MAC_SDK = macosx10.11
@@ -13,7 +13,6 @@ CONFIG += c++11
 INCLUDEPATH += ../engine
 LIBS += -L../engine -lengine
 INCLUDEPATH += ../../lib
-LIBS += -L../../lib -llib
 
 RESOURCES += \
     shaders.qrc
