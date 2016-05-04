@@ -22,15 +22,20 @@ using namespace std;
 using glm::mat4;
 using glm::vec3;
 using glm::vec4;
+using glm::inverse;
 using std::string;
 
 
 GLWidget::GLWidget(QWidget *parent) : QOpenGLWidget(parent) {
+    setMouseTracking(true);
     baseWidth = 1600;
     baseHeight = 900;
     width = baseWidth;
     height = baseHeight;
+    bottomBoardState = 0;
     engine = TakEngine(5, true);
+    currentMove.x = -1;
+    currentMove.y = -1;
     Move place;
     place.type = "place";
     place.x = 0;
@@ -234,6 +239,7 @@ void GLWidget::updatePositions()
 
     vec3 whiteSquare(1,1,1);
     vec3 blackSquare(.7,.7,.7);
+    vec3 highlightSquare(.8,.8,1);
     vec3 whitePiece(1,1,1);
     vec3 blackPiece(0,0,0);
     for(int k = 0; k < engine.boardSize; k++)
@@ -241,7 +247,11 @@ void GLWidget::updatePositions()
         for(int a = 0; a < engine.boardSize; a++)
         {
             //background
-            if(grey)
+            if(currentMove.x == a && currentMove.y == k)
+            {
+                addRect(boardOffsetX + a * squareSize, boardOffsetY + k * squareSize, squareSize, squareSize, highlightSquare);
+            }
+            else if(grey)
             {
                 addRect(boardOffsetX + a * squareSize, boardOffsetY + k * squareSize, squareSize, squareSize, blackSquare);
             }
@@ -410,6 +420,24 @@ void GLWidget::updatePositions()
 
         currentY += 60;
     }
+    
+    addRect(50, 727, 1500, 143, rectColor);
+    //bottom board
+    if(bottomBoardState == 1)
+    {
+        vec3 color(0,0,0);
+        if(engine.whiteTurn())
+        {
+            color = vec3(1,1,1);
+        }
+
+        addRect(800-60, 727+11, 120, 120, color);
+        addRect(800-200-20, 727+11, 40, 120, color);
+        addHex(800+200, 727+71, 70, color);
+    }
+    else if(bottomBoardState == 2)
+    {
+    }
 }
 
 void GLWidget::addRect(double topLeftX, double topLeftY, double width, double height, vec3 color)
@@ -565,3 +593,81 @@ GLuint GLWidget::loadShaders(const char* vertf, const char* fragf) {
     return program;
 }
 
+void GLWidget::mouseMoveEvent(QMouseEvent *event)
+{
+    vec2 pt(event->x(), event->y());
+    vec2 rawPt = vec2(inverse(projection) * vec4(pt.x / width * 2 - 1, 1 - pt.y / height * 2, 0, 1));
+
+    if(bottomBoardState == 0)
+    {
+        if(rawPt.x >= boardOffsetX && rawPt.y >= boardOffsetY &&
+           rawPt.x <= boardOffsetX + squareSize * engine.boardSize && rawPt.y <= boardOffsetY + squareSize * engine.boardSize)
+        {
+            currentMove.x = (rawPt.x - boardOffsetX) / squareSize;
+            currentMove.y = (rawPt.y - boardOffsetY) / squareSize;
+        }
+        else
+        {
+            currentMove.x = -1;
+            currentMove.y = -1;
+        }
+    }
+    else if(bottomBoardState == 1)
+    {
+        if(rawPt.x >= 540 && rawPt.y >= 727 &&
+           rawPt.x <= 1060 && rawPt.y <= 870)
+        {
+            if(rawPt.x < 670)
+            {
+                currentMove.placeType = 1;
+            }
+            else if(rawPt.x < 930)
+            {
+                currentMove.placeType = 0;
+            }
+            else
+            {
+                currentMove.placeType = 2;
+            }
+        }
+        else
+        {
+            currentMove.placeType = -1;
+        }
+    }
+
+    update();
+}
+
+void GLWidget::mousePressEvent(QMouseEvent *event)
+{
+    if(bottomBoardState == 0)
+    {
+        if(currentMove.x >= 0 && currentMove.y >= 0)
+        {
+            if(engine.numberAtSpot(currentMove.x, currentMove.y) == 0)
+            {
+                bottomBoardState = 1;
+                currentMove.type = "place";
+            }
+            else
+            {
+                bottomBoardState = 2;
+            }
+        }
+    }
+    else if(bottomBoardState == 1)
+    {
+        if(currentMove.placeType >= 0)
+        {
+            if(engine.tryMove(currentMove))
+            {
+                bottomBoardState = 0;
+                currentMove.x = -1;
+                currentMove.y = -1;
+                currentMove.type = "";
+                currentMove.placeType = -1;
+            }
+        }
+    }
+}

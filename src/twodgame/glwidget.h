@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <QtGui/QImage>
 #include "takengine.h"
+#include "move.h"
 #include <vector>
 
 // glm by default uses degrees, but that functionality
@@ -32,6 +33,8 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 
         void keyPressEvent(QKeyEvent *event);
         void keyReleaseEvent(QKeyEvent *event);
+        void mouseMoveEvent(QMouseEvent *event);
+        void mousePressEvent(QMouseEvent *event);
 
     private:
         GLuint loadShaders(const char* vertf, const char* fragf);
@@ -77,6 +80,13 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
         double squareSize;
         double boardOffsetX;
         double boardOffsetY;
+
+        //0- blank
+        //1- choose place
+        //2- choose move
+        int bottomBoardState;
+
+        Move currentMove;
 };
 
 #endif
