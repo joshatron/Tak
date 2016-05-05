@@ -322,6 +322,11 @@ bool Board::validMoveMove(Move move)
             return false;
         }
 
+        if(current.length() > move.toLeave[k])
+        {
+            return false;
+        }
+
         //at start location
         if(currX == x && currY == y)
         {
