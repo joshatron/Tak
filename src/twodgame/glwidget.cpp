@@ -34,6 +34,8 @@ GLWidget::GLWidget(QWidget *parent) : QOpenGLWidget(parent) {
     height = baseHeight;
     bottomBoardState = 0;
     engine = TakEngine(5, true);
+    currentMove.x = -1;
+    currentMove.y = -1;
 }
 
 GLWidget::~GLWidget() {
@@ -383,12 +385,86 @@ void GLWidget::updatePositions()
             color = vec3(1,1,1);
         }
 
-        addRect(800-60, 727+11, 120, 120, color);
-        addRect(800-200-20, 727+11, 40, 120, color);
-        addHex(800+200, 727+71, 70, color);
+        vec3 highlightSquare(.8,.8,1);
+        if(currentMove.placeType == 0)
+        {
+            addRect(800-60, 727+11, 120, 120, highlightSquare);
+        }
+        else
+        {
+            addRect(800-60, 727+11, 120, 120, color);
+        }
+        if(currentMove.placeType == 1)
+        {
+            addRect(800-200-20, 727+11, 40, 120, highlightSquare);
+        }
+        else
+        {
+            addRect(800-200-20, 727+11, 40, 120, color);
+        }
+        if(currentMove.placeType == 2)
+        {
+            addHex(800+200, 727+71, 70, highlightSquare);
+        }
+        else
+        {
+            addHex(800+200, 727+71, 70, color);
+        }
     }
     else if(bottomBoardState == 2)
     {
+        vec3 color(1,1,1);
+        if(currentMove.direction.compare("n") == 0)
+        {
+            addRect(800-20, 727+11, 40, 40, highlightSquare);
+        }
+        else
+        {
+            addRect(800-20, 727+11, 40, 40, color);
+        }
+        if(currentMove.direction.compare("s") == 0)
+        {
+            addRect(800-20, 870-11-40, 40, 40, highlightSquare);
+        }
+        else
+        {
+            addRect(800-20, 870-11-40, 40, 40, color);
+        }
+        if(currentMove.direction.compare("w") == 0)
+        {
+            addRect(800-80, 798-20, 40, 40, highlightSquare);
+        }
+        else
+        {
+            addRect(800-80, 798-20, 40, 40, color);
+        }
+        if(currentMove.direction.compare("e") == 0)
+        {
+            addRect(800+40, 798-20, 40, 40, highlightSquare);
+        }
+        else
+        {
+            addRect(800+40, 798-20, 40, 40, color);
+        }
+    }
+    else if(bottomBoardState == 3)
+    {
+        vec3 color(1,1,1);
+        double height = 120 / stackLeft.length();
+        double startY = 738;
+        for(int k = 0; k < stackLeft.length(); k++)
+        {
+            if(currentNum == k)
+            {
+                color = vec3(.8,.8,1);
+            }
+            else
+            {
+                color = vec3(1,1,1);
+            }
+            addRect(740, startY, 120, height, color);
+            startY += height;
+        }
     }
 }
 
@@ -587,12 +663,74 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
             currentMove.placeType = -1;
         }
     }
+    else if(bottomBoardState == 2)
+    {
+        if(rawPt.x >= 700 && rawPt.y >= 727 &&
+           rawPt.x <= 900 && rawPt.y <= 870)
+        {
+            if(rawPt.x < 770)
+            {
+                currentMove.direction = "w";
+            }
+            else if(rawPt.x > 830)
+            {
+                currentMove.direction = "e";
+            }
+            else if(rawPt.y < 798)
+            {
+                currentMove.direction = "n";
+            }
+            else
+            {
+                currentMove.direction = "s";
+            }
+        }
+        else
+        {
+            currentMove.direction = "";
+        }
+    }
+    else if(bottomBoardState == 3)
+    {
+        if(rawPt.x >= 740 && rawPt.x <= 860 &&
+           rawPt.y >= 738 && rawPt.y <= 858)
+        {
+            double height = 120 / stackLeft.length();
+            currentNum = (rawPt.y - 738) / height;
+        }
+        else
+        {
+            currentNum = -1;
+        }
+    }
 
     update();
 }
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
+    vec2 pt(event->x(), event->y());
+    vec2 rawPt = vec2(inverse(projection) * vec4(pt.x / width * 2 - 1, 1 - pt.y / height * 2, 0, 1));
+
+    if(rawPt.x >= boardOffsetX && rawPt.y >= boardOffsetY &&
+       rawPt.x <= boardOffsetX + squareSize * engine.boardSize && rawPt.y <= boardOffsetY + squareSize * engine.boardSize)
+    {
+        currentMove.x = (rawPt.x - boardOffsetX) / squareSize;
+        currentMove.y = (rawPt.y - boardOffsetY) / squareSize;
+
+        if(engine.numberAtSpot(currentMove.x, currentMove.y) == 0)
+        {
+            bottomBoardState = 1;
+            currentMove.type = "place";
+        }
+        else
+        {
+            bottomBoardState = 2;
+            currentMove.type = "move";
+            currentMove.direction = "";
+        }
+    }
+
     if(bottomBoardState == 0)
     {
         if(currentMove.x >= 0 && currentMove.y >= 0)
@@ -605,6 +743,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
             else
             {
                 bottomBoardState = 2;
+                currentMove.type = "move";
+                currentMove.direction = "";
             }
         }
     }
@@ -622,4 +762,39 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
             }
         }
     }
+    else if(bottomBoardState == 2)
+    {
+        if(currentMove.direction.compare("") != 0)
+        {
+            bottomBoardState = 3;
+            stackLeft = engine.stringAtSpot(currentMove.x, currentMove.y);
+            distance = 1;
+            currentNum = -1;
+            currentMove.toLeave[0] = 0;
+        }
+    }
+    else if(bottomBoardState == 3)
+    {
+        if(currentNum >= 0)
+        {
+            currentNum = stackLeft.length() - currentNum;
+            currentMove.toLeave[distance] = currentNum;
+            distance++;
+            stackLeft = stackLeft.substr(currentNum, stackLeft.length() - currentNum);
+        }
+
+        if(stackLeft.compare("") == 0)
+        {
+            currentMove.distance = distance;
+            engine.tryMove(currentMove);
+            bottomBoardState = 0;
+            currentMove.x = -1;
+            currentMove.type = "";
+            currentMove.placeType = -1;
+            currentMove.direction = "";
+            currentMove.distance = 0;
+        }
+    }
+
+    update();
 }

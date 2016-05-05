@@ -83,8 +83,13 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 
         //0- blank
         //1- choose place
-        //2- choose move
+        //2- choose direction
+        //3- choose move
         int bottomBoardState;
+
+        string stackLeft;
+        int distance;
+        int currentNum;
 
         Move currentMove;
 };
