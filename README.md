@@ -19,9 +19,23 @@ cd cli
 ./cli
 ```
 
+To run 2d game:
+```bash
+cd twodgame
+./twodgame
+```
+
 TODO:
 
-* make gui for game
+* 2d gui for game
+    * end game
+    * select board size
+    * restart game
+    * select starting player
+    * better move choices
+* import/export
+    * starting board setup
+    * export match
 * test engine
     * placing
         * illegal piece
@@ -70,6 +84,3 @@ TODO:
             * black empty
             * black no capstones
             * black no normal pieces
-* import/export
-    * starting board setup
-    * export match
