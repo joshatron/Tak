@@ -48,6 +48,7 @@ class TakEngine
         int whiteCapstonesLeft(){return currentBoard.whiteCapstones;}
         int blackPiecesLeft(){return currentBoard.blackPieces;}
         int blackCapstonesLeft(){return currentBoard.blackCapstones;}
+        bool firstTurns(){return (currentBoard.firstMove > 0) ? true : false;}
 };
 
 #endif

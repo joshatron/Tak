@@ -374,13 +374,29 @@ void GLWidget::updatePositions()
 
         currentY += 60;
     }
+
+    vec3 highlightColor(0,0,0);
+    if(engine.whiteTurn())
+    {
+        addRect(48, 28, 4, 661, highlightColor);
+        addRect(398, 28, 4, 661, highlightColor);
+        addRect(48, 28, 354, 4, highlightColor);
+        addRect(48, 685, 354, 4, highlightColor);
+    }
+    else
+    {
+        addRect(1198, 28, 4, 661, highlightColor);
+        addRect(1548, 28, 4, 661, highlightColor);
+        addRect(1198, 28, 354, 4, highlightColor);
+        addRect(1198, 685, 354, 4, highlightColor);
+    }
     
-    addRect(50, 727, 1500, 143, rectColor);
+    //addRect(50, 727, 1500, 143, rectColor);
     //bottom board
     if(bottomBoardState == 1)
     {
         vec3 color(0,0,0);
-        if(engine.whiteTurn())
+        if(engine.whiteTurn() && !engine.firstTurns() || !engine.whiteTurn() && engine.firstTurns())
         {
             color = vec3(1,1,1);
         }
@@ -450,11 +466,11 @@ void GLWidget::updatePositions()
     else if(bottomBoardState == 3)
     {
         vec3 color(1,1,1);
-        double height = 120 / stackLeft.length();
+        double height = 100 / stackLeft.length();
         double startY = 738;
         for(int k = 0; k < stackLeft.length(); k++)
         {
-            if(currentNum == k)
+            if(currentNum == k + 1)
             {
                 color = vec3(.8,.8,1);
             }
@@ -465,6 +481,15 @@ void GLWidget::updatePositions()
             addRect(740, startY, 120, height, color);
             startY += height;
         }
+        if(currentNum == 0)
+        {
+            color = vec3(.8,.8,1);
+        }
+        else
+        {
+            color = vec3(1,1,1);
+        }
+        addRect(730, 838, 140, 20, color);
     }
 }
 
@@ -693,10 +718,15 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     else if(bottomBoardState == 3)
     {
         if(rawPt.x >= 740 && rawPt.x <= 860 &&
-           rawPt.y >= 738 && rawPt.y <= 858)
+           rawPt.y >= 738 && rawPt.y <= 838)
         {
-            double height = 120 / stackLeft.length();
-            currentNum = (rawPt.y - 738) / height;
+            double height = 100 / stackLeft.length();
+            currentNum = (rawPt.y - 738) / height + 1;
+        }
+        else if(rawPt.x >= 730 && rawPt.x <= 870 &&
+                rawPt.y >= 838 && rawPt.y <= 858)
+        {
+            currentNum = 0;
         }
         else
         {
@@ -768,7 +798,7 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
         {
             bottomBoardState = 3;
             stackLeft = engine.stringAtSpot(currentMove.x, currentMove.y);
-            distance = 1;
+            distance = 0;
             currentNum = -1;
             currentMove.toLeave[0] = 0;
         }
@@ -777,7 +807,10 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
     {
         if(currentNum >= 0)
         {
-            currentNum = stackLeft.length() - currentNum;
+            if(currentNum != 0)
+            {
+                currentNum = stackLeft.length() - currentNum + 1;
+            }
             currentMove.toLeave[distance] = currentNum;
             distance++;
             stackLeft = stackLeft.substr(currentNum, stackLeft.length() - currentNum);
