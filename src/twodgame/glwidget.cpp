@@ -32,7 +32,7 @@ GLWidget::GLWidget(QWidget *parent) : QOpenGLWidget(parent) {
     baseHeight = 900;
     width = baseWidth;
     height = baseHeight;
-    bottomBoardState = 0;
+    bottomBoardState = 6;
     engine = TakEngine(5, true);
     currentMove.x = -1;
     currentMove.y = -1;
@@ -173,6 +173,19 @@ void GLWidget::paintGL() {
 
 void GLWidget::updatePositions()
 {
+    if(bottomBoardState != 6)
+    {
+        int done = engine.gameDone();
+        if(done == 1)
+        {
+            bottomBoardState = 4;
+        }
+        else if(done == 2)
+        {
+            bottomBoardState = 5;
+        }
+    }
+
     points.clear();
     lines.clear();
     colors.clear();
@@ -491,6 +504,72 @@ void GLWidget::updatePositions()
         }
         addRect(730, 838, 140, 20, color);
     }
+    else if(bottomBoardState == 4)
+    {
+        addRect(50, 727, 1500, 143, vec3(1,1,1));
+    }
+    else if(bottomBoardState == 5)
+    {
+        addRect(50, 727, 1500, 143, vec3(0,0,0));
+    }
+    else if(bottomBoardState == 6)
+    {
+        if(nextGameSize == 3)
+        {
+            addRect(166, 738, 120, 120, vec3(.8,.8,1));
+        }
+        else
+        {
+            addRect(166, 738, 120, 120, vec3(1,1,1));
+        }
+        if(nextGameSize == 4)
+        {
+            addRect(397, 738, 120, 120, vec3(.8,.8,1));
+        }
+        else
+        {
+            addRect(397, 738, 120, 120, vec3(1,1,1));
+        }
+        if(nextGameSize == 5)
+        {
+            addRect(621, 738, 120, 120, vec3(.8,.8,1));
+        }
+        else
+        {
+            addRect(621, 738, 120, 120, vec3(1,1,1));
+        }
+        if(nextGameSize == 6)
+        {
+            addRect(852, 738, 120, 120, vec3(.8,.8,1));
+        }
+        else
+        {
+            addRect(852, 738, 120, 120, vec3(1,1,1));
+        }
+        if(nextGameSize == 7)
+        {
+            addRect(1083, 738, 120, 120, vec3(.8,.8,1));
+        }
+        else
+        {
+            addRect(1083, 738, 120, 120, vec3(1,1,1));
+        }
+        if(nextGameSize == 8)
+        {
+            addRect(1314, 738, 120, 120, vec3(.8,.8,1));
+        }
+        else
+        {
+            addRect(1314, 738, 120, 120, vec3(1,1,1));
+        }
+
+        addGridLines(166, 738, 120, 120, 3);
+        addGridLines(397, 738, 120, 120, 4);
+        addGridLines(621, 738, 120, 120, 5);
+        addGridLines(852, 738, 120, 120, 6);
+        addGridLines(1083, 738, 120, 120, 7);
+        addGridLines(1314, 738, 120, 120, 8);
+    }
 }
 
 void GLWidget::addRect(double topLeftX, double topLeftY, double width, double height, vec3 color)
@@ -538,12 +617,35 @@ void GLWidget::addHex(double centerX, double centerY, double radius, vec3 color)
     }
 }
 
+void GLWidget::addGridLines(double topLeftX, double topLeftY, double width, double height, int size)
+{
+    //horizontal
+    double h = height / size;
+    double startY = topLeftY + h;
+    for(int k = 0; k < size - 1; k++)
+    {
+        lines.push_back(vec2(topLeftX, startY));
+        lines.push_back(vec2(topLeftX + width, startY));
+        startY += h;
+    }
+
+    //vertical
+    h = width / size;
+    double startX = topLeftX + h;
+    for(int k = 0; k < size - 1; k++)
+    {
+        lines.push_back(vec2(startX, topLeftY));
+        lines.push_back(vec2(startX, topLeftY + height));
+        startX += h;
+    }
+}
+
 // Copied from LoadShaders.cpp in the the oglpg-8th-edition.zip
 // file provided by the OpenGL Programming Guide, 8th edition.
 const GLchar* GLWidget::readShader(const char* filename) {
 #ifdef WIN32
-        FILE* infile;
-        fopen_s( &infile, filename, "rb" );
+    FILE* infile;
+    fopen_s( &infile, filename, "rb" );
 #else
     FILE* infile = fopen( filename, "rb" );
 #endif // WIN32
@@ -654,7 +756,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     if(bottomBoardState == 0)
     {
         if(rawPt.x >= boardOffsetX && rawPt.y >= boardOffsetY &&
-           rawPt.x <= boardOffsetX + squareSize * engine.boardSize && rawPt.y <= boardOffsetY + squareSize * engine.boardSize)
+                rawPt.x <= boardOffsetX + squareSize * engine.boardSize && rawPt.y <= boardOffsetY + squareSize * engine.boardSize)
         {
             currentMove.x = (rawPt.x - boardOffsetX) / squareSize;
             currentMove.y = (rawPt.y - boardOffsetY) / squareSize;
@@ -668,7 +770,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     else if(bottomBoardState == 1)
     {
         if(rawPt.x >= 540 && rawPt.y >= 727 &&
-           rawPt.x <= 1060 && rawPt.y <= 870)
+                rawPt.x <= 1060 && rawPt.y <= 870)
         {
             if(rawPt.x < 670)
             {
@@ -691,7 +793,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     else if(bottomBoardState == 2)
     {
         if(rawPt.x >= 700 && rawPt.y >= 727 &&
-           rawPt.x <= 900 && rawPt.y <= 870)
+                rawPt.x <= 900 && rawPt.y <= 870)
         {
             if(rawPt.x < 770)
             {
@@ -718,7 +820,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
     else if(bottomBoardState == 3)
     {
         if(rawPt.x >= 740 && rawPt.x <= 860 &&
-           rawPt.y >= 738 && rawPt.y <= 838)
+                rawPt.y >= 738 && rawPt.y <= 838)
         {
             double height = 100 / stackLeft.length();
             currentNum = (rawPt.y - 738) / height + 1;
@@ -733,6 +835,14 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
             currentNum = -1;
         }
     }
+    else if(bottomBoardState == 6)
+    {
+        if(rawPt.x >= 105 && rawPt.x <= 1495 &&
+           rawPt.y >= 727 && rawPt.y <= 870)
+        {
+            nextGameSize = (rawPt.x + 105) / 231 + 2;
+        }
+    }
 
     update();
 }
@@ -742,22 +852,25 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
     vec2 pt(event->x(), event->y());
     vec2 rawPt = vec2(inverse(projection) * vec4(pt.x / width * 2 - 1, 1 - pt.y / height * 2, 0, 1));
 
-    if(rawPt.x >= boardOffsetX && rawPt.y >= boardOffsetY &&
-       rawPt.x <= boardOffsetX + squareSize * engine.boardSize && rawPt.y <= boardOffsetY + squareSize * engine.boardSize)
+    if(bottomBoardState < 4)
     {
-        currentMove.x = (rawPt.x - boardOffsetX) / squareSize;
-        currentMove.y = (rawPt.y - boardOffsetY) / squareSize;
+        if(rawPt.x >= boardOffsetX && rawPt.y >= boardOffsetY &&
+                rawPt.x <= boardOffsetX + squareSize * engine.boardSize && rawPt.y <= boardOffsetY + squareSize * engine.boardSize)
+        {
+            currentMove.x = (rawPt.x - boardOffsetX) / squareSize;
+            currentMove.y = (rawPt.y - boardOffsetY) / squareSize;
 
-        if(engine.numberAtSpot(currentMove.x, currentMove.y) == 0)
-        {
-            bottomBoardState = 1;
-            currentMove.type = "place";
-        }
-        else
-        {
-            bottomBoardState = 2;
-            currentMove.type = "move";
-            currentMove.direction = "";
+            if(engine.numberAtSpot(currentMove.x, currentMove.y) == 0)
+            {
+                bottomBoardState = 1;
+                currentMove.type = "place";
+            }
+            else
+            {
+                bottomBoardState = 2;
+                currentMove.type = "move";
+                currentMove.direction = "";
+            }
         }
     }
 
@@ -818,6 +931,32 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 
         if(stackLeft.compare("") == 0)
         {
+            currentMove.distance = distance;
+            engine.tryMove(currentMove);
+            bottomBoardState = 0;
+            currentMove.x = -1;
+            currentMove.type = "";
+            currentMove.placeType = -1;
+            currentMove.direction = "";
+            currentMove.distance = 0;
+        }
+    }
+    else if(bottomBoardState == 4 || bottomBoardState == 5)
+    {
+        if(rawPt.x >= 50 && rawPt.x <= 1550 &&
+           rawPt.y >= 727 && rawPt.y <= 870)
+        {
+            bottomBoardState = 6;
+            nextGameSize = 0;
+        }
+    }
+    else if(bottomBoardState == 6)
+    {
+        if(nextGameSize != 0)
+        {
+            engine = TakEngine(nextGameSize, true);
+            bottomBoardState = 0;
+
             currentMove.distance = distance;
             engine.tryMove(currentMove);
             bottomBoardState = 0;

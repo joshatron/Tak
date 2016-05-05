@@ -44,6 +44,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
 
         void addRect(double topLeftX, double topLeftY, double width, double height, vec3 color);
         void addHex(double centerX, double centerY, double radius, vec3 color);
+        void addGridLines(double topLeftX, double topLeftY, double width, double height, int size);
 
         GLuint vao;
         GLuint program;
@@ -85,11 +86,14 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
         //1- choose place
         //2- choose direction
         //3- choose move
+        //4- white won
+        //5- black won
         int bottomBoardState;
 
         string stackLeft;
         int distance;
         int currentNum;
+        int nextGameSize;
 
         Move currentMove;
 };

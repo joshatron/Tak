@@ -28,11 +28,7 @@ cd twodgame
 TODO:
 
 * 2d gui for game
-    * end game
-    * select board size
-    * restart game
-    * select starting player
-    * better move choices
+    * better move ui
 * import/export
     * starting board setup
     * export match
