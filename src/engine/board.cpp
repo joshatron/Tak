@@ -322,7 +322,7 @@ bool Board::validMoveMove(Move move)
             return false;
         }
 
-        if(current.length() > move.toLeave[k])
+        if(current.length() < move.toLeave[k])
         {
             return false;
         }
